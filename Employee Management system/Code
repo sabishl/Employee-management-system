@@ -1,0 +1,1578 @@
+import 'package:email_validator/email_validator.dart';
+import 'package:flutter/material.dart';
+import 'package:sql_conn/sql_conn.dart';
+import 'dart:convert';
+import 'dart:async';
+
+void main() => runApp(MyApp());
+var em;
+var data3;
+var data4;
+var data5;
+var alldata,alldata1,alldata2,alldata3,alldata4,alldata5,alldata6,alldata7;
+final fields=['id','name','age','experience','salary','department_name','designation_name'];
+Future<void> getData() async {
+  var email2=em;
+  print("email"+email2);
+  final query="SELECT * FROM employee1 WHERE EMAIL='$email2';";
+
+  final data2 = await SqlConn.readData(query);
+  data3=jsonDecode(data2);
+  print(data3.length);
+  print(data3);
+  var dpid,dsid;
+  if(data3.length!=0) {
+    dpid = data3[0]['dept_id'];
+    dsid = data3[0]['desg_id'];
+    final query1 = "SELECT * FROM department WHERE DEPT_ID=$dpid;";
+    final query2 = "SELECT * FROM designation WHERE DESG_ID=$dsid;";
+    var da1 = await SqlConn.readData(query1);
+    var da2 = await SqlConn.readData(query2);
+    data4 = jsonDecode(da1);
+    data5 = jsonDecode(da2);
+    print(data4);
+    print(data5);
+  }
+
+}
+Future<void> getData1() async {
+  var cse=1;
+  var eee=2;
+  var ece=3;
+  var civil=4;
+  var mech=5;
+  var it=6;
+  var aids=7;
+  var csbs=8;
+  final query="SELECT * FROM employee1 WHERE DEPT_ID='$cse';";
+  final query1="SELECT * FROM employee1 WHERE DEPT_ID='$eee';";
+  final query2="SELECT * FROM employee1 WHERE DEPT_ID='$ece';";
+  final query3="SELECT * FROM employee1 WHERE DEPT_ID='$civil';";
+  final query4="SELECT * FROM employee1 WHERE DEPT_ID='$mech';";
+  final query5="SELECT * FROM employee1 WHERE DEPT_ID='$it';";
+  final query6="SELECT * FROM employee1 WHERE DEPT_ID='$aids';";
+  final query7="SELECT * FROM employee1 WHERE DEPT_ID='$csbs';";
+
+
+  final dat = await SqlConn.readData(query);
+  final dat1 = await SqlConn.readData(query1);
+  final dat2 = await SqlConn.readData(query2);
+  final dat3 = await SqlConn.readData(query3);
+  final dat4 = await SqlConn.readData(query4);
+  final dat5 = await SqlConn.readData(query5);
+  final dat6 = await SqlConn.readData(query6);
+  final dat7 = await SqlConn.readData(query7);
+  alldata=jsonDecode(dat);
+  alldata1=jsonDecode(dat1);
+  alldata2=jsonDecode(dat2);
+  alldata3=jsonDecode(dat3);
+  alldata4=jsonDecode(dat4);
+  alldata5=jsonDecode(dat5);
+  alldata6=jsonDecode(dat6);
+  alldata7=jsonDecode(dat7);
+  print(alldata);
+  print(alldata1);
+  print(alldata2);
+  print(alldata3);
+  print(alldata4);
+  print(alldata5);
+  print(alldata6);
+  print(alldata7);
+
+}
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return  MaterialApp(
+      theme: ThemeData(primarySwatch:Colors.green),
+      home:Login(
+
+      ),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class Login extends StatefulWidget  {
+  const Login({Key? key}) : super(key: key);
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+
+class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
+
+  final  email=new TextEditingController();
+  final password=new TextEditingController();
+  final  email1=new TextEditingController();
+  final password1=new TextEditingController();
+  final formKey=GlobalKey<FormState>();
+  final formKey1=GlobalKey<FormState>();
+  late TabController _controler;
+  var data;
+  var data1;
+  Future<void> connectToDatabase() async {
+    print(SqlConn.isConnected);
+    await SqlConn.connect(
+        ip: "172.16.65.26",
+        port: "1433",
+        databaseName: "21cs058",
+        username: "sa",
+        password: "12345678");
+
+    print(SqlConn.isConnected);
+
+  }
+
+  Future<void> login(String email,String password) async {
+    em=email;
+    final query= "SELECT * FROM login WHERE EMAIL = '$email' AND PASSWORD ='$password';";
+
+
+    data = await SqlConn.readData(query);
+    data1=jsonDecode(data);
+
+
+    if (data1.length > 0 && data1.length==1) {
+
+      getData();
+      getData1();
+      ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(
+        content:Text("Logging in..."),
+        duration: const Duration(seconds: 1),
+
+
+      ),);
+      await Future.delayed(const Duration(seconds: 2));
+      const Center(child: CircularProgressIndicator(
+        value: 1.0,
+        color: Colors.black,
+      ));
+
+      Navigator.pushReplacement(
+          this.context,
+          MaterialPageRoute(
+              builder:(context)=>Instructions()));
+
+
+    } else {
+      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content:Text("Invalid email or password"),
+        duration: const Duration(seconds: 1),
+      ),
+      );
+    }
+
+
+  }
+  Future<void> signin(String email,String password) async {
+
+    final query0 = "SELECT * FROM login WHERE EMAIL = '$email';";
+    final query1 = "INSERT INTO login VALUES('$email','$password');";
+    final query2 = "SELECT * FROM login WHERE PASSWORD = '$password';";
+
+    final result = await SqlConn.readData(query0);
+    final result2 = await SqlConn.readData(query2);
+    var result1=jsonDecode(result);
+    var result3=jsonDecode(result2);
+
+    if (result1.length ==0 && result3.length==0) {
+      await SqlConn.writeData(query1);
+      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content:Text("Sign upped Successfully"),
+        duration: const Duration(seconds: 1),
+      ));
+    } else if(result1.length==1){
+      print(result1);
+      print(result1.length);
+      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content:Text("User already exist"),
+        duration: const Duration(seconds: 1),
+      ));
+    }
+    else if(result3.length==1){
+      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content:Text("Password already exist"),
+        duration: const Duration(seconds: 1),
+      ));
+    }
+  }
+
+
+
+  @override
+  void initState(){
+    super.initState();
+    connectToDatabase();
+    _controler=TabController(length: 2, vsync: this,initialIndex: 0);
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.greenAccent,
+      appBar: AppBar(
+        title: Text("Employee Management System"),
+        backgroundColor: Colors.black,
+        bottom: TabBar(
+          controller: _controler,
+          tabs: [
+            Row(
+                children:[
+                  Icon(Icons.account_box_outlined),
+                  Text("    Sign in",style: TextStyle(fontSize: 20),),
+                ]
+            ),
+            Row(
+                children: [
+                  Icon(Icons.login_rounded),
+                  Text("    Log in",style: TextStyle(fontSize: 20)),
+                ]
+            ),
+
+          ],),
+
+      ),
+      body: TabBarView(
+        controller: _controler,
+        children: [
+          ListView(
+            shrinkWrap: true,
+            children:[
+              Icon(Icons.account_circle_sharp,size: 200,),
+              Form(
+                key: formKey1,
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                          child:Text("E-mail       ",style: TextStyle(fontSize: 20),),
+                        ),
+                        Expanded(
+                          child:TextFormField(
+                            controller: email1,
+                            validator: (value){
+                              if(EmailValidator.validate(email1.text)==false) {
+                                return"Please enter a valid email";
+                              }
+                            },
+                            style: TextStyle(color: Colors.black),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your email...',hintStyle: TextStyle(color: Colors.grey[20]),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 3, color: Colors.black),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      ],
+                    ),
+                    Row(
+                      children: [
+
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal:20,vertical:00),
+                          child:Text("Password",style: TextStyle(fontSize: 20),),
+                        ),
+                        Expanded(
+                          child:TextFormField(
+                            controller: password1,
+                            validator: (value){
+                              if ((value!.isNotEmpty && value.length<5)|| value.isEmpty){
+                                return "Please set a strong password";
+                              }
+                            },
+                            obscureText: true,
+                            style: TextStyle(color: Colors.black),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your password',hintStyle: TextStyle(color: Colors.grey[20]),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    width: 3, color: Colors.black),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],              ),
+              ),
+              Container(
+                child: ButtonTheme(child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                    onPressed: () {
+                      if(formKey1.currentState!.validate()){
+                        signin(email1.text, password1.text);
+                        email1.clear();
+                        password1.clear();
+                      }
+                    },
+                    child: const Padding(padding: EdgeInsets.all(20),
+                      child: Text('Submit',style: TextStyle(fontSize: 20,color: Colors.black),),
+                    )
+                ),
+                ),
+              ),
+            ],
+          ),
+          ListView(
+            shrinkWrap: true,
+            children: [
+              Icon(Icons.account_circle_sharp,size: 200,),
+              Form(
+                  key: formKey,
+                  child:Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("E-mail       ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: email,
+                              validator: (value){
+                                if(EmailValidator.validate(email.text)==false) {
+                                  return"Please enter a valid email";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your email...',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:00),
+                            child:Text("Password",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: password,
+                              validator: (value){
+                                if ((value!.isNotEmpty && value.length<5) || value.isEmpty){
+                                  return "Please enter the pasword";
+                                }
+                              },
+                              obscureText: true,
+                              style: TextStyle(color: Colors.black),
+                              decoration:InputDecoration(
+                                hintText: 'Enter your password',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  )
+              ),
+
+              Container(
+                child: ButtonTheme(child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                    onPressed: () {
+                      if(formKey.currentState!.validate() && password.value !=null && email.value != null ){
+                        login(email.text, password.text);
+                        email.clear();
+                        password.clear();
+                      }
+                    },
+                    child: const Padding(padding: EdgeInsets.all(20),
+                      child: Text('Submit',style: TextStyle(fontSize: 20,color: Colors.black),),
+                    )
+                ),
+                ),
+              ),
+            ],
+          ),
+
+        ],
+      ),
+
+
+    );
+  }
+}
+class Instructions extends StatefulWidget {
+  const Instructions({Key? key}) : super(key: key);
+
+  @override
+  State<Instructions> createState() => _InstructionsState();
+}
+
+class _InstructionsState extends State<Instructions> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.greenAccent,
+      appBar:AppBar(
+        title: Text("Instructions",style: TextStyle(fontSize: 20),),
+
+
+
+        backgroundColor: Colors.black,
+      ),
+
+      body: ListView(
+        children: [
+          Row(
+            children: [
+              Text("\n\n 1.This is the application to maintain \n     the data of the employees by employees.\n",style: TextStyle(fontSize: 20),)
+            ],
+          ),
+          Row(
+            children: [
+              Text(" 2. In this application,the employees can\n     create,edit and delete their data.\n",style: TextStyle(fontSize: 20))
+            ],
+          ),
+          Row(
+            children: [
+              Text(" 3. Employees can see the other employee\n     name,department_id and designation_id.\n",style: TextStyle(fontSize: 20),)
+            ],
+          ),
+          Row(
+            children: [
+              Text(" 4. You cannot create,edit and delete other\n      employee data.\n",style: TextStyle(fontSize: 20),)
+            ],
+          ),
+          Row(
+            children: [
+              Text(" 5. If you new to this application,you should\n     create your data.\n",style: TextStyle(fontSize: 20),)
+            ],
+          ),
+          Row(
+            children: [
+              Text(" 6. You cannot edit department_id and\n     designation_id.\n",style: TextStyle(fontSize: 20),)
+            ],
+          ),
+          Row(
+            children: [
+              Padding(padding: EdgeInsets.symmetric(horizontal: 140),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                        this.context,
+                        MaterialPageRoute(
+                            builder:(context)=>Home()));
+                  },
+                  child: Text("Get start",style: TextStyle(fontSize: 20,color: Colors.black),),
+
+                ),
+              ),
+
+            ],
+          ),
+          Row(
+            children: [
+              Padding(padding: EdgeInsets.symmetric(horizontal: 140),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                        this.context,
+                        MaterialPageRoute(
+                            builder:(context)=>Login()));
+                  },
+                  child: Text(" Log out",style: TextStyle(fontSize: 20,color: Colors.black),),
+
+                ),
+              ),
+
+            ],
+          )
+        ],
+
+      ),
+    );
+  }
+}
+
+
+class Home extends StatefulWidget {
+  const Home({Key? key}) : super(key: key);
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin{
+  final  id_control=new TextEditingController();
+  final name_control=new TextEditingController();
+  final email_control=new TextEditingController();
+  final age_control=new TextEditingController();
+  final exp_control=new TextEditingController();
+  final sal_control=new TextEditingController();
+  final dept_id_control=new TextEditingController();
+  final desg_id_control=new TextEditingController();
+  final dept_name_control=new TextEditingController();
+  final desg_name_control=new TextEditingController();
+  final newData_control=new TextEditingController();
+  final f_control=new TextEditingController();
+  final formKey2=GlobalKey<FormState>();
+  final formKey3=GlobalKey<FormState>();
+  String dropdownValue = 'Choose the department';
+  String dropdownValue1 = 'Choose the department_id';
+  String dropdownValue2 = 'Choose the designation_id';
+  String dropdownValue3 = 'Choose the designation';
+  Future<void> saveDetails(String id,String name,String email,String age,String experience,String salary,String dept_id,String dept_name,String desg_id,String desg_name) async {
+    final query="SELECT * FROM employee1 WHERE EMAIL='$email'; ";
+    final query5="SELECT * FROM department WHERE DEPT_ID='$dept_id' OR DEPT_NAME='$dept_name';";
+    final query6="SELECT * FROM designation WHERE DESG_ID='$desg_id' OR DESG_NAME='$desg_name';";
+    var d1=await SqlConn.readData(query);
+    var d2=await SqlConn.readData(query5);
+    var d3=await SqlConn.readData(query6);
+    var da1=jsonDecode(d1);
+    var da2=jsonDecode(d2);
+    var da3=jsonDecode(d3);
+    print(da1.length);
+    print(da2.length);
+    print(da3.length);
+    if(da1.length==0 && da2.length==0) {
+      final query3 = "INSERT INTO department VALUES('$dept_id','$dept_name');";
+      await SqlConn.writeData(query3);
+    }
+    if(da1.length==0 && da3.length==0) {
+      final query4 = "INSERT INTO designation VALUES('$desg_id','$desg_name');";
+      await SqlConn.writeData(query4);
+    }
+    if(da1.length==0) {
+      final query2 = "INSERT INTO employee1 VALUES('$id','$name','$email','$age','$experience','$salary','$dept_id','$desg_id');";
+      await SqlConn.writeData(query2);
+    }
+    if(da1.length==1){
+      ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content: Text("You can't create more than one!!!"),
+        duration: const Duration(seconds: 1),
+      ),
+      );
+    }
+    getData();
+    getData1();
+    ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+        content: Text("Your data saved Successfully"),
+        duration:const Duration(seconds: 2)
+    ),
+    );
+    await Future.delayed(const Duration(seconds: 3));
+    Navigator.pushReplacement(
+        this.context,
+        MaterialPageRoute(
+            builder: (context) => Home()));
+
+
+
+  }
+
+  Future<void> Rename(String f,String ne) async{
+    var new1=ne;
+    f=f.toUpperCase();
+    if(f=='ID') {
+      final query = "UPDATE employee1 SET ID='$new1' WHERE EMAIL='$em';";
+      await SqlConn.writeData(query);
+    }
+    if(f=='NAME') {
+      final query = "UPDATE employee1 SET NAME='$new1' WHERE EMAIL='$em';";
+      await SqlConn.writeData(query);
+    }
+    if(f=='AGE') {
+      final query = "UPDATE employee1 SET AGE='$new1' WHERE EMAIL='$em';";
+      await SqlConn.writeData(query);
+    }
+    if(f=='EXPERIENCE') {
+      final query = "UPDATE employee1 SET EXPERIENCE='$new1' WHERE EMAIL='$em';";
+      await SqlConn.writeData(query);
+    }
+    if(f=='SALARY') {
+      final query = "UPDATE employee1 SET SALARY='$new1' WHERE EMAIL='$em';";
+      await SqlConn.writeData(query);
+    }
+    if(f=='DEPARTMENT_NAME') {
+      final query = "UPDATE department SET DEPT_NAME='$new1' WHERE DEPT_NAME IN(SELECT DEPT_NAME FROM employee1 WHERE EMAIL='$em');";
+      await SqlConn.writeData(query);
+    }
+    if(f=='DESIGNATION_NAME') {
+      final query = "UPDATE designation SET DESG_NAME='$new1' WHERE DESG_NAME IN (SELECT DESG_NAME FROM employee1 WHERE EMAIL='$em');";
+      await SqlConn.writeData(query);
+    }
+
+    getData();
+    getData1();
+    ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+      content:Text("Updated successfully.."),
+      duration: const Duration(seconds: 2),
+    ));
+    await Future.delayed(Duration(seconds: 2));
+    Navigator.pushReplacement(
+        this.context,
+        MaterialPageRoute(
+            builder:(context)=>Home()));
+  }
+
+  Future<void> delete() async {
+
+    final query0 = "DELETE FROM employee1 WHERE EMAIL='$em';";
+
+    await SqlConn.writeData(query0);
+    getData();
+    getData1();
+    ScaffoldMessenger.of(this.context).showSnackBar(const SnackBar(
+      content:Text("Delated successfully.."),
+      duration: const Duration(seconds: 2),
+    ));
+    await Future.delayed(const Duration(seconds: 3));
+    Navigator.pushReplacement(
+        this.context,
+        MaterialPageRoute(
+            builder:(context)=>Home()));
+
+
+  }
+
+
+  @override
+
+  late TabController _controler1;
+  void initState(){
+    super.initState();
+    _controler1=TabController(length: 4, vsync: this,initialIndex: 0);
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        backgroundColor: Colors.greenAccent,
+        appBar: AppBar(
+          title: Text("Employee Management System"),
+          backgroundColor: Colors.black,
+          bottom: TabBar(
+            controller: _controler1, tabs: [
+            Row(
+                children:[
+
+                  Text("Create",style: TextStyle(fontSize: 20),),
+                ]
+            ),
+            Row(
+                children:[
+                  Icon(Icons.edit_attributes),
+                  Text(" Edit",style: TextStyle(fontSize: 20),),
+                ]
+            ),
+            Row(
+                children:[
+                  Icon(Icons.view_array_outlined),
+                  Text("View",style: TextStyle(fontSize: 20),),
+                ]
+            ),
+            Row(
+                children:[
+
+                  Text("Details",style: TextStyle(fontSize: 20),),
+                ]
+            ),
+
+          ],
+          ),
+        ),
+        body: TabBarView(
+          controller: _controler1,
+          children: [
+            ListView(
+              shrinkWrap: true,
+              children: [
+                Form(
+                  key: formKey2,
+                  child:Column(
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("Id                ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller:id_control,
+                              validator: (value){
+                                if (value!.isEmpty){
+                                  return "Please enter your Id";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your Id',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:00),
+                            child:Text("Name         ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: name_control,
+                              validator: (value){
+                                if (value!.isEmpty){
+                                  return "Please enter your name";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your name',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("Email          ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: email_control,
+                              validator: (value){
+                                if (EmailValidator.validate(email_control.text)==false || email_control.text!=em){
+                                  return "Please enter the email used for login";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your email',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:20),
+                            child:Text("Age             ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: age_control,
+                              validator: (value){
+                                if (value!.isEmpty){
+                                  return "Please enter your age";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration: InputDecoration(
+                                hintText: 'Enter your age',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("Experience",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: exp_control,
+                              validator: (value){
+                                if (value!.isEmpty){
+                                  return "Please enter your experiance";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration:  InputDecoration(
+                                hintText: 'Enter your experience(in years)',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:20),
+                            child:Text("Salary         ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:TextFormField(
+                              controller: sal_control,
+                              validator: (value){
+                                if (value!.isEmpty){
+                                  return "Please enter your Salary";
+                                }
+                              },
+                              style: TextStyle(color: Colors.black),
+                              decoration:  InputDecoration(
+                                hintText: 'Enter your Salary',hintStyle: TextStyle(color: Colors.grey[20]),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                      width: 3, color: Colors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("Dep_Id        ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:DropdownButton<String>(
+                              value: dropdownValue1,
+                              items: <String>['Choose the department_id','1', '2', '3', '4','5','6','7','8']
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: TextStyle(fontSize: 20),),);
+                              }).toList(),
+                              underline: Container( height: 2, color: Colors.black),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dropdownValue1 = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:20),
+                            child:Text("Dep_Name",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child: DropdownButton<String>(
+                              value: dropdownValue,
+                              items: <String>['Choose the department','CSE', 'EEE', 'ECE', 'CIVIL','MECH','IT','AIDS','CSBS']
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: TextStyle(fontSize: 20),),);
+                              }).toList(),
+                              underline: Container( height: 2, color: Colors.black),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dropdownValue = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:40),
+                            child:Text("Des_Id        ",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:DropdownButton<String>(
+                              value: dropdownValue2,
+                              items: <String>['Choose the designation_id','1','2','3','4']
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: TextStyle(fontSize: 20),),);
+                              }).toList(),
+                              underline: Container( height: 2, color: Colors.black),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dropdownValue2 = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal:20,vertical:20),
+                            child:Text("Des_Name",style: TextStyle(fontSize: 20),),
+                          ),
+                          Expanded(
+                            child:DropdownButton<String>(
+                              value: dropdownValue3,
+                              items: <String>['Choose the designation','Head of the Department', 'Associate Professor', 'Assistant Professor','Technician']
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: TextStyle(fontSize: 20),),);
+                              }).toList(),
+                              underline: Container( height: 2, color: Colors.black),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  dropdownValue3 = newValue!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                Container(
+                  child: ButtonTheme(child: TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if(formKey2.currentState!.validate()){
+                            saveDetails(id_control.text,name_control.text,email_control.text,age_control.text,exp_control.text,sal_control.text,dropdownValue1,dropdownValue,dropdownValue2,dropdownValue3);
+
+
+                            id_control.clear();
+                            name_control.clear();
+                            email_control.clear();
+                            age_control.clear();
+                            exp_control.clear();
+                            sal_control.clear();
+                            dept_id_control.clear();
+                            desg_id_control.clear();
+                            desg_name_control.clear();
+                            dept_name_control.clear();
+                            dropdownValue1='Choose the department_id';
+                            dropdownValue='Choose the department';
+                            dropdownValue2='Choose the designation_id';
+                            dropdownValue3='Choose the designation';
+
+                          }
+
+                        });
+
+                      },
+                      child: Padding(padding: EdgeInsets.all(20),
+                        child: Text('Submit',style: TextStyle(fontSize: 20,color: Colors.black),),
+                      )
+                  ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 170),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                              this.context,
+                              MaterialPageRoute(
+                                  builder:(context)=>Instructions()));
+                        },
+                        child: Text("Back",style: TextStyle(fontSize: 20,color: Colors.black),),
+
+                      ),
+                    )
+                  ],
+                )
+
+              ],
+            ),
+            ListView(
+              children: [
+                if(data3.length==0)
+                  Column(
+                      children:const [
+                        SizedBox(
+                          height: 300,
+                        ),
+                        Center(
+                          child: Text("Create and save your data",style: TextStyle(fontSize: 20),),
+                        )
+                      ]
+                  )
+                else
+                  Column(
+                    children: [
+                      SizedBox(height: 10,),
+                      Card(
+                        child: ListTile(
+                          title: Text("Id"),
+                          subtitle:Text(data3[0]['id'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Name"),
+                          subtitle:Text(data3[0]['name']),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("E-mail"),
+                          subtitle:Text(data3[0]['email']),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Age"),
+                          subtitle:Text(data3[0]['age'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Experience"),
+                          subtitle:Text(data3[0]['experience'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Salary"),
+                          subtitle:Text(data3[0]['salary'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Department_Id"),
+                          subtitle:Text(data3[0]['dept_id'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Department_Name"),
+                          subtitle:Text(data4[0]['dept_name']),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Designation_Id"),
+                          subtitle:Text(data3[0]['desg_id'].toString()),
+                          onTap: (){},
+                        ),
+                      ),
+                      Card(
+                        child: ListTile(
+                          title: Text("Designation_Name"),
+                          subtitle:Text(data5[0]['desg_name']),
+                          onTap: (){},
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 50,vertical: 15),
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.blue,
+                              ),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showMaterialBanner(
+                                    MaterialBanner(
+                                        content: Center(child:Text("Enter the edit field and new data: ",style: TextStyle(fontSize: 20),),),
+                                        leadingPadding: const EdgeInsets.all(20),
+                                        backgroundColor: Colors.greenAccent,
+                                        actions:[
+                                          SizedBox(
+                                            height: 50,
+                                          ),
+                                          Form(
+                                            key: formKey3,
+                                            child:SizedBox(
+                                              width: 400,
+                                              child:Column(
+                                                  children:[
+                                                    TextFormField(
+                                                      controller: f_control,
+                                                      validator: (value){
+                                                        if (!fields.contains(f_control.text)){
+                                                          return "Please enter the corect edit field with small case";
+
+                                                        }
+                                                      },
+                                                      style: TextStyle(color: Colors.black),
+                                                      decoration: InputDecoration(
+                                                        hintText: 'Enter the edit field',hintStyle: TextStyle(color: Colors.grey[20]),
+                                                        enabledBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              width: 3, color: Colors.black),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(
+                                                      height: 25,
+                                                    ),
+                                                    TextFormField(
+                                                      controller: newData_control,
+                                                      validator: (value){
+                                                        if (value!.isEmpty){
+                                                          return "Please enter new data";
+                                                        }
+                                                      },
+                                                      style: TextStyle(color: Colors.black),
+                                                      decoration: InputDecoration(
+                                                        hintText: 'Enter the new data',hintStyle: TextStyle(color: Colors.grey[20]),
+                                                        enabledBorder: OutlineInputBorder(
+                                                          borderSide: BorderSide(
+                                                              width: 3, color: Colors.black),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ]
+                                              ),
+                                            ),
+                                          ),Row(
+                                              children:[
+                                                Spacer(),
+                                                TextButton(
+                                                    onPressed: (){
+                                                      ScaffoldMessenger.of(context)
+                                                          .clearMaterialBanners();
+                                                      newData_control.clear();
+                                                      f_control.clear();
+
+                                                    }, child: Text("cancel",style: TextStyle(fontSize: 20,color: Colors.black),)
+                                                ),
+                                                TextButton(
+                                                    onPressed: (){
+                                                      if(formKey3.currentState!.validate()) {
+                                                        Rename(f_control.text,newData_control.text);
+                                                        ScaffoldMessenger.of(context)
+                                                            .clearMaterialBanners();
+                                                        newData_control.clear();
+                                                        f_control.clear();
+                                                      }
+                                                    }, child: Text("Update",style: TextStyle(fontSize: 20,color: Colors.black),)),
+
+                                              ]
+                                          ),
+                                        ]
+                                    )
+                                );
+
+
+                              },
+
+                              child: Text('Edit',style: TextStyle(fontSize: 20,color: Colors.black),),
+
+                            ),
+                          ),
+                          Spacer(),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 50,vertical: 15),
+                            child: TextButton(
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.blue,
+                              ),
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showMaterialBanner(MaterialBanner(
+                                  content: Center(child: Text("Are you sure,Do you want to delete",style: TextStyle(fontSize: 20),),),
+                                  backgroundColor: Colors.greenAccent,
+                                  actions: [
+                                    TextButton(onPressed: (){
+                                      ScaffoldMessenger.of(context)
+                                          .clearMaterialBanners();
+                                    }, child: Text("No",style: TextStyle(fontSize: 20,color: Colors.black),)),
+                                    TextButton(onPressed: (){
+                                      delete();
+                                      ScaffoldMessenger.of(context)
+                                          .clearMaterialBanners();
+                                    }, child: Text("Yes",style: TextStyle(fontSize: 20,color: Colors.black),)),
+                                  ],
+
+                                ),
+                                );
+
+                              },
+
+                              child: Text('Delete',style: TextStyle(fontSize: 20,color: Colors.black),),
+
+                            ),
+                          )
+                        ],
+                      )
+
+                    ],
+                  )
+
+              ],
+            ),
+
+
+            ListView(
+              children: [
+                Column(
+                    children: [
+                      SizedBox(height: 10),
+                      Card(
+                        child: ListTile(
+                          title: Text("Department of Computer Science and Engineering",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+
+                      else
+                        for(int i=0;i<alldata.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text("              Department of Electricals and Electronics\n                                  Engineering",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata1.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata1.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata1[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata1[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata1[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata1[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text(" Department of Electronics and Communications\n                                  Engineering",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata2.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata2.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata2[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata2[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata2[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata2[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text("                Department of Civil Engineering",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata3.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata3.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata3[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata3[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata3[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata3[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text("              Department of Mechanical Engineering",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata4.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata4.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata4[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata4[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata4[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata4[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text("         Department of Information Technology",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata5.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata5.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata5[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata5[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata5[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata5[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text("    Department of Artificial Intellegence and Data\n                                   Science",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata6.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata6.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata6[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata6[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata6[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata6[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+                      Card(
+                        child: ListTile(
+                          title: Text(" Department of Computer Science and business \n                                    Systems",style:TextStyle(fontWeight: FontWeight.bold)),
+                          onTap: (){},
+                        ),
+                      ),
+                      if(alldata7.length==0)
+                        Column(
+                            children:[
+                              Text('      Opps!!! \nthere is no data',style: TextStyle(fontSize: 20),),
+
+                            ]
+                        )
+                      else
+                        for(int i=0;i<alldata7.length;i++)
+                          Card(
+                            child: ListTile(
+                              title: Text(alldata7[i]['name']),
+                              subtitle:Text("Department_id"+"  :  "+alldata7[i]['dept_id'].toString()+"     "+"Designation_id"+"  :   "+alldata7[i]['desg_id'].toString()),
+                              onTap: (){},
+                              leading: CircleAvatar(
+                                child: Text(alldata7[i]['name'].toString().substring(0,1).toUpperCase()),
+                              ),
+                            ),
+                          ),
+                      SizedBox(height: 30,),
+
+
+
+                    ]
+                )
+              ],
+            ),
+            ListView(
+              children: [
+                Column(
+                  children: [
+                    SizedBox(height: 15,),
+                    Card(
+                      child: ListTile(
+                        title:Text("Department and its Id",style: TextStyle(fontSize: 20),),
+                        onTap: (){},
+                      ),
+                    ),
+                    SizedBox(height: 15,),
+                    Row(
+                      children: [
+                        Center(child: Text("Computer Science and Engineering - 1 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Electrical and Electronics Engineering -  2 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Electronics and Communications - 3\n ",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Civil Engineering-  4 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Mechanical Engineering- 5 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Information Technology-6 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+
+                    Row(
+                      children: [
+                        Center(child: Text("Artificial Intelligence and Data Science-7 \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Center(child: Text("Computer Science and Business  -  8\nSystems \n",style: TextStyle(fontSize: 20)))
+                      ],
+                    ),
+                    Card(
+                      child: ListTile(
+                        title:Text("              Designations and its Id",style: TextStyle(fontSize: 20),),
+                        onTap: (){},
+                      ),
+                    ),
+                    SizedBox(height: 15,),
+                    Row(
+                      children: [
+                        Text("              Head of the Department  -  1 \n",style: TextStyle(fontSize: 20))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text("              Associate Professor         -  2 \n",style: TextStyle(fontSize: 20))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text("              Assistant Professor          -  3 \n",style: TextStyle(fontSize: 20))
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text("               Technician                         -  4 \n",style: TextStyle(fontSize: 20))
+                      ],
+                    )
+
+
+                  ],
+                )
+              ],
+            ),
+          ],
+        )
+    );
+  }
+}
