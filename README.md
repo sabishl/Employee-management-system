@@ -30,7 +30,9 @@ Scalability and Performance: Efficient handling of growing data and users.
 
 Front End: Flutter
 Backend: Microsoft SQL Server
-Pages:
+
+**Pages:**
+
 LOGIN OR SIGN IN
 CREATE
 VIEW
